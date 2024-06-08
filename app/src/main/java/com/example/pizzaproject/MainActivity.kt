@@ -12,6 +12,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -47,23 +49,30 @@ class MainActivity : ComponentActivity() {
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setAvailableProviders(providers)
+            .setAlwaysShowSignInMethodScreen(false)
+            .setIsSmartLockEnabled(false)
             .build()
+
+        val userRepository = UserRepository.getInstance()
+        userRepository.initialize()
 
         setContent {
             PizzaProjectTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    val user by userRepository.currentUser.collectAsState()
+
+                    if (user == null) {
+                        Text("Login first!")
+                        signInLauncher.launch(signInIntent)
+                    }
                     BuyPizzaScreen(
                         modifier = Modifier.padding(innerPadding),
                         onBuyPizzaClicked = {
-                            if (FirebaseAuth.getInstance().currentUser == null) {
-                                signInLauncher.launch(signInIntent)
-                            } else {
-                                Toast.makeText(
-                                    this,
-                                    "You are already logged in",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                            Toast.makeText(
+                                this,
+                                "Enjoy your pizza!",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     )
                 }
